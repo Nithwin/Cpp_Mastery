@@ -2,14 +2,25 @@
 #include <string>
 using namespace std;
 
-template <typename T>
-T getMaximum(T a, T b){
-    return (a > b) ? a: b;
-}
+template <typename T1, typename T2>
+class NetworkPair {
+    private:
+        T1 first;
+        T2 second;
+    public:
+        NetworkPair(T1 a, T2 b){
+            first = a;
+            second = b;
+        }
+        void print(){
+            cout << first << " " << second << "\n";
+        }
+};
 
 int main(){
-    cout << getMaximum(4,55) << " \n";
-    cout << getMaximum(4.44,55.55) << " \n";
-    cout << getMaximum('z','a') << " \n";
+    NetworkPair np(3,5);
+    np.print();
+    NetworkPair np2("Hello","World");
+    np2.print();
     return 0;
 }
