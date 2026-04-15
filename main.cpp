@@ -1,4 +1,6 @@
 #include <iostream>
+#include <memory>
+#include <vector>
 using namespace std;
 
 class NetworkDevice{
@@ -36,15 +38,11 @@ class Switch: public NetworkDevice {
 };
 
 int main(){
-    NetworkDevice** arr = new NetworkDevice*[2];
-    arr[0] = new Firewall;
-    arr[1]  = new Switch;
-    for(int i = 0; i < 2; i++){
-        arr[i]->processPacket();
+    vector<unique_ptr<NetworkDevice>> devices;
+    devices.push_back(make_unique<Firewall>());
+    devices.push_back(make_unique<Switch>());
+    for(auto& device: devices){
+        device->processPacket();
     }
-    for(int i = 0; i < 2; i++){
-        delete arr[i];
-    }
-    delete[] arr;
     return 0;
 }
