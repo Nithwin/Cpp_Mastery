@@ -1,48 +1,48 @@
 #include <iostream>
-#include <memory>
-#include <vector>
+#include <utility>
 using namespace std;
 
-class NetworkDevice{
-    public:
-    virtual void processPacket(){
-        cout << "Process Packet default...";
+class PacketBuffer {
+public:
+    int* data;
+    int size;
+
+    // 1. Standard Constructor
+    PacketBuffer(int s) {
+        size = s;
+        data = new int[size];
+        cout << "Allocated " << size << " bytes.\n";
     }
 
-    virtual ~NetworkDevice(){
-        cout << "Network Device Destroyed...";
+    // 2. Destructor
+    ~PacketBuffer() {
+        if (data != nullptr) {
+            delete[] data;
+            cout << "Destroyed buffer.\n";
+        }
+    }
+
+    // 3. YOUR TRIAL: THE MOVE CONSTRUCTOR
+    // It takes an Rvalue reference to another PacketBuffer (using &&)
+    PacketBuffer(PacketBuffer&& source) noexcept {
+        // TODO: Steal the 'data' pointer and 'size' from 'source'.
+        // TODO: Set 'source.data' to nullptr and 'source.size' to 0 so its destructor doesn't delete your stolen data!
+        //PacketBuffer tmp = move(source);
+        this->data = source.data;
+        this->size = source.size;
+        source.data = nullptr;
+        source.size = 0;
+        cout << "Stole buffer of size " << size << "!\n";
     }
 };
 
-class Firewall: public NetworkDevice {
-    public:
-    void processPacket() override {
-        cout << "Firewall Packet...";
-    }
-
-    ~Firewall(){
-        cout << "Firewall Destroyed...";
-    }
-
-};
-
-class Switch: public NetworkDevice {
-    public:
-    void processPacket() override {
-        cout << "Switch Packet Processor...";
-    }
-
-    ~Switch(){
-        cout << "Switch Destoryed...";
-    }
-};
-
-int main(){
-    vector<unique_ptr<NetworkDevice>> devices;
-    devices.push_back(make_unique<Firewall>());
-    devices.push_back(make_unique<Switch>());
-    for(auto& device: devices){
-        device->processPacket();
-    }
+int main() {
+    PacketBuffer original(100); // Calls standard constructor
+    
+    // Calls your Move Constructor! original is cast to an Rvalue.
+    PacketBuffer stolen = std::move(original); 
+    
+    // If your code works, only ONE destruction of data should occur, 
+    // because 'original' will safely destruct with a nullptr.
     return 0;
 }
