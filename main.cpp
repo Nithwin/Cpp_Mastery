@@ -1,35 +1,54 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <algorithm>
+
 using namespace std;
 
-template <typename T1, typename T2>
-class NetworkPair {
-    public:
-        T1 first;
-        T2 second;
-    public:
-        NetworkPair(T1 a, T2 b){
-            first = a;
-            second = b;
-        }
-        void print(){
-            cout << first << " " << second << "\n";
-        }
+// The Base Class
+class Packet {
+public:
+    virtual ~Packet() {} // Virtual destructor is REQUIRED for dynamic_cast to work!
 };
 
-int main(){
-    vector<NetworkPair<string,int>> servers;
-    servers.push_back({"10.0.0.1", 8080});
-    servers.push_back({"192.168.1.5", 22});
-    servers.push_back({"172.16.0.1", 443});
+// Derived Class 1
+class PingPacket : public Packet {
+public:
+    int getPing() { return 42; }
+};
 
-    sort(servers.begin(), servers.end(), [](const NetworkPair<string,int> &a,const NetworkPair<string,int> &b){
-        return a.second < b.second;
-    });
-    for(auto &server: servers){
-        server.print();
+// Derived Class 2
+class DataPacket : public Packet {
+public:
+    string getPayload() { return "Secure Video Stream"; }
+};
+
+// YOUR TRIAL: Complete this function
+void inspectPacket(Packet* genericPacket) {
+    // TODO: Use dynamic_cast<PingPacket*>(genericPacket) to check if it's a PingPacket.
+    // If it is, call getPing() and print it.
+    PingPacket* pp = dynamic_cast<PingPacket*>(genericPacket);
+    if(pp != nullptr){
+        cout << pp->getPing() << "\n";
     }
+    
+    // TODO: Use dynamic_cast<DataPacket*>(genericPacket) to check if it's a DataPacket.
+    // If it is, call getPayload() and print it.
+    DataPacket* dp = dynamic_cast<DataPacket*>(genericPacket);
+
+    if(dp != nullptr){
+        cout << dp->getPayload() << "\n";
+    }
+}
+
+int main() {
+    PingPacket p1;
+    DataPacket p2;
+
+    cout << "Inspecting Packet 1...\n";
+    inspectPacket(&p1);
+
+    cout << "Inspecting Packet 2...\n";
+    inspectPacket(&p2);
+
     return 0;
 }
