@@ -1,48 +1,27 @@
 #include <iostream>
-#include <utility>
+#include <thread>
+#include <chrono>
+
 using namespace std;
 
-class PacketBuffer {
-public:
-    int* data;
-    int size;
-
-    // 1. Standard Constructor
-    PacketBuffer(int s) {
-        size = s;
-        data = new int[size];
-        cout << "Allocated " << size << " bytes.\n";
-    }
-
-    // 2. Destructor
-    ~PacketBuffer() {
-        if (data != nullptr) {
-            delete[] data;
-            cout << "Destroyed buffer.\n";
-        }
-    }
-
-    // 3. YOUR TRIAL: THE MOVE CONSTRUCTOR
-    // It takes an Rvalue reference to another PacketBuffer (using &&)
-    PacketBuffer(PacketBuffer&& source) noexcept {
-        // TODO: Steal the 'data' pointer and 'size' from 'source'.
-        // TODO: Set 'source.data' to nullptr and 'source.size' to 0 so its destructor doesn't delete your stolen data!
-        //PacketBuffer tmp = move(source);
-        this->data = source.data;
-        this->size = source.size;
-        source.data = nullptr;
-        source.size = 0;
-        cout << "Stole buffer of size " << size << "!\n";
-    }
-};
+void downloadFirmware() {
+    cout << "Background: Downloading...\n";
+    this_thread::sleep_for(chrono::seconds(2)); // Simulate hard work
+    cout << "Background: Download Complete!\n";
+}
 
 int main() {
-    PacketBuffer original(100); // Calls standard constructor
+    cout << "Main: Starting program.\n";
     
-    // Calls your Move Constructor! original is cast to an Rvalue.
-    PacketBuffer stolen = std::move(original); 
+    // 1. Spawn the thread. It starts running immediately!
+    thread worker(downloadFirmware); 
     
-    // If your code works, only ONE destruction of data should occur, 
-    // because 'original' will safely destruct with a nullptr.
+    cout << "Main: Doing other things while downloading...\n";
+    
+    // 2. The Golden Rule of Threads: You MUST join() or detach() before the thread object is destroyed.
+    // join() means "Main thread will pause here and wait for the worker to finish."
+    worker.join(); 
+    
+    cout << "Main: Shutting down.\n";
     return 0;
 }
