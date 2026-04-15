@@ -9,10 +9,12 @@ int totalPackets = 0;
 mutex packetMutex;
 
 void processPacket(){
+    int local = 0;
     for(int i = 0; i < 10000000; i++){
-        lock_guard<mutex> lock(packetMutex);
-        totalPackets++;
+        local++;
     }
+    lock_guard<mutex> lock(packetMutex);
+    totalPackets+=local;
 }
 
 int main() {
