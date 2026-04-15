@@ -3,37 +3,8 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <cstring>
-#include <thread>
 
 using namespace std;
-
-void handleClient(int client_socket) {
-    char buffer[1024] = {0}; // A bucket to hold the incoming text
-    
-    // Send welcome message
-    const char* hello = "Welcome! Type a message:\n";
-    send(client_socket, hello, strlen(hello), 0);
-    
-    // Infinite loop to keep talking to this specific client
-    while(true) {
-        memset(buffer, 0, 1024); // Clear the bucket
-        
-        // recv() waits until the client types something
-        int bytes_received = recv(client_socket, buffer, 1024, 0);
-        
-        // If they disconnect, bytes_received is 0 or less
-        if (bytes_received <= 0) {
-            cout << "Client disconnected.\n";
-            break; 
-        }
-        
-        cout << "Client says: " << buffer;
-        
-        // Echo it back!
-        send(client_socket, buffer, bytes_received, 0);
-    }
-    close(client_socket); // Hang up the phone when they leave
-}
 
 int main() {
     int server_fd, client_socket;
@@ -71,12 +42,8 @@ int main() {
     // TODO 4: Wait and grab the first person who connects!
     // client_socket = ?????(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen);
     // ---------------------------------------------------------
+    client_socket = accept(server_fd,(struct sockaddr *)&address, (socklen_t*)&addrlen);
     cout << "A Client has connected!\n";
-    while(true){
-        client_socket = accept(server_fd,(struct sockaddr *)&address, (socklen_t*)&addrlen);
-        thread worker(handleClient, client_socket);
-        worker.detach();
-    }
 
     // We send a welcome message using the TCP socket!
     const char* hello = "Welcome to the Alcatel-Lucent Trial Server!\n";
