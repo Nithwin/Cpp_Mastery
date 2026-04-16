@@ -1,54 +1,51 @@
 #include <iostream>
-#include <string>
-#include <vector>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
 
 using namespace std;
 
-// The Base Class
-class Packet {
-public:
-    virtual ~Packet() {} // Virtual destructor is REQUIRED for dynamic_cast to work!
-};
+// 1. The Box, the Key, and the Doorbell
+bool packageDelivered = false; 
+mutex boxKey;                  
+condition_variable doorbell;   
 
-// Derived Class 1
-class PingPacket : public Packet {
-public:
-    int getPing() { return 42; }
-};
-
-// Derived Class 2
-class DataPacket : public Packet {
-public:
-    string getPayload() { return "Secure Video Stream"; }
-};
-
-// YOUR TRIAL: Complete this function
-void inspectPacket(Packet* genericPacket) {
-    // TODO: Use dynamic_cast<PingPacket*>(genericPacket) to check if it's a PingPacket.
-    // If it is, call getPing() and print it.
-    PingPacket* pp = dynamic_cast<PingPacket*>(genericPacket);
-    if(pp != nullptr){
-        cout << pp->getPing() << "\n";
-    }
+// 2. You (The Consumer)
+void homeowner() {
+    cout << "Homeowner: Going to sleep until the doorbell rings...\n";
     
-    // TODO: Use dynamic_cast<DataPacket*>(genericPacket) to check if it's a DataPacket.
-    // If it is, call getPayload() and print it.
-    DataPacket* dp = dynamic_cast<DataPacket*>(genericPacket);
-
-    if(dp != nullptr){
-        cout << dp->getPayload() << "\n";
-    }
+    // You grab your key
+    unique_lock<mutex> lock(boxKey);
+    
+    // You go to sleep. The wait() function automatically drops your key while you sleep.
+    // It says: "Wake me up ONLY IF packageDelivered becomes true."
+    doorbell.wait(lock, []{ return packageDelivered; }); 
+    
+    // ... YOU ARE ASLEEP HERE ...
+    
+    // When the doorbell rings, you wake up, and wait() automatically grabs the key again!
+    cout << "Homeowner: Woke up! Grabbing the package.\n";
 }
 
-int main() {
-    PingPacket p1;
-    DataPacket p2;
+// 3. The Driver (The Producer)
+void deliveryDriver() {
+    this_thread::sleep_for(chrono::seconds(3)); // Simulate driving to your house
+    
+    {
+        // Driver grabs their key, opens the box, and puts the package in
+        lock_guard<mutex> lock(boxKey);
+        packageDelivered = true;
+        cout << "Driver: Package is in the box.\n";
+    } // Driver locks the box and leaves
+    
+    // Driver rings the doorbell!
+    doorbell.notify_one(); 
+}
 
-    cout << "Inspecting Packet 1...\n";
-    inspectPacket(&p1);
-
-    cout << "Inspecting Packet 2...\n";
-    inspectPacket(&p2);
-
+int main(){
+    thread worker1(homeowner);
+    thread worker2(deliveryDriver);
+    worker1.join();
+    worker2.join();
     return 0;
 }
